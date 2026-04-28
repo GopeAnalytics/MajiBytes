@@ -1,0 +1,12 @@
+{
+  "name": "nasa-power-proxy",
+  "version": "1.0.0",
+  "description": "HTTP proxy for NASA POWER API for SIM800L",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=14"
+  }
+}
