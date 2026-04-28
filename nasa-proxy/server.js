@@ -4,32 +4,47 @@ const https = require('https');
 const PORT = process.env.PORT || 3000;
 
 http.createServer((req, res) => {
-  // Health check
   if (req.url === '/health') {
     res.writeHead(200);
     res.end('OK');
     return;
   }
 
-  // Only handle /nasa path
   if (!req.url.startsWith('/nasa')) {
     res.writeHead(404);
     res.end('Not found');
     return;
   }
 
-  // Build NASA POWER URL from query string
-  const queryString = req.url.replace('/nasa', '').replace('/?', '?');
+  const queryString = req.url.replace('/nasa', '');
   const nasaURL = 'https://power.larc.nasa.gov/api/temporal/daily/point' + queryString;
 
   console.log('Fetching: ' + nasaURL);
 
-  https.get(nasaURL, (nasaRes) => {
-    res.writeHead(nasaRes.statusCode, {
-      'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin': '*'
+  const options = {
+    hostname: 'power.larc.nasa.gov',
+    path: '/api/temporal/daily/point' + queryString,
+    method: 'GET',
+    headers: {
+      'User-Agent': 'Mozilla/5.0',
+      'Accept': 'application/json'
+    }
+  };
+
+  https.get(options, (nasaRes) => {
+    let data = '';
+    
+    nasaRes.on('data', chunk => { data += chunk; });
+    
+    nasaRes.on('end', () => {
+      res.writeHead(200, {
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(data),
+        'Access-Control-Allow-Origin': '*'
+      });
+      res.end(data);
     });
-    nasaRes.pipe(res);
+
   }).on('error', (err) => {
     console.error('Error: ' + err.message);
     res.writeHead(500);
